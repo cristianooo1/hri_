@@ -10,5 +10,8 @@ source install/setup.bash
 ros2 run wshri_gui gui_server --port 3000
 ```
 
+## Run without ROS2
+```bash
+python3 gui_server.py
+```
 Open `http://localhost:3000` in your browser.
-
