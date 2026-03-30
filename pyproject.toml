@@ -3,9 +3,16 @@ name = "hri"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.12"
 dependencies = [
+    "cffi<2.0.0",
+    "edge-tts>=7.2.7",
+    "faster-whisper>=1.2.1",
     "google-genai>=1.65.0",
+    "pyaudio>=0.2.14",
+    "pygame>=2.6.1",
     "python-dotenv>=1.2.2",
+    "pyttsx3>=2.99",
     "requests>=2.32.5",
+    "speechrecognition>=3.14.5",
 ]
