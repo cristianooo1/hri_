@@ -1,0 +1,40 @@
+[1.287s] Invoking command in '/home/costin/ros2_wshri/hri_/build/wshri_gui': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/costin/ros2_wshri/hri_/build/wshri_gui/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/costin/ros2_wshri/hri_/install/wshri_gui/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/costin/ros2_wshri/hri_/build/wshri_gui/build --no-deps symlink_data
+[1.773s] running develop
+[1.774s] /home/costin/ros2_wshri/hri_/.venv/lib/python3.12/site-packages/setuptools/_distutils/cmd.py:90: DevelopDeprecationWarning: develop command is deprecated.
+[1.774s] !!
+[1.774s] 
+[1.774s]         ********************************************************************************
+[1.774s]         Please avoid running ``setup.py`` and ``develop``.
+[1.774s]         Instead, use standards-based tools like pip or uv.
+[1.774s] 
+[1.774s]         This deprecation is overdue, please update your project and remove deprecated
+[1.775s]         calls to avoid build errors in the future.
+[1.775s] 
+[1.775s]         See https://github.com/pypa/setuptools/issues/917 for details.
+[1.775s]         ********************************************************************************
+[1.775s] 
+[1.775s] !!
+[1.775s]   self.initialize_options()
+[2.661s] [33mWARNING: Skipping /usr/lib/python3.12/dist-packages/pybind11-2.11.1.dist-info due to invalid metadata entry 'name'[0m[33m
+[2.662s] Obtaining file:///home/costin/ros2_wshri/hri_/build/wshri_gui
+[6.697s]   Installing build dependencies ... [?25l- \ | done
+[6.935s] [?25h  Checking if build backend supports build_editable ... [?25ldone
+[7.194s] [?25h  Getting requirements to build editable ... [?25l- done
+[7.467s] [?25h  Preparing editable metadata (pyproject.toml) ... [?25l- done
+[7.473s] [?25hBuilding wheels for collected packages: wshri_gui
+[7.760s]   Building editable for wshri_gui (pyproject.toml) ... [?25l- done
+[7.761s] [?25h  Created wheel for wshri_gui: filename=wshri_gui-0.0.1-0.editable-py3-none-any.whl size=3306 sha256=2d569d233a8d642811238029d3cd1ced49c142afcb3d9c2416a1de609cb9a369
+[7.761s]   Stored in directory: /tmp/pip-ephem-wheel-cache-2r_o37in/wheels/f2/bc/b9/5c3db1045c0d49a5ab3a9a81cb31052d03fe3dbf1486a61b96
+[7.764s] Successfully built wshri_gui
+[7.765s] Installing collected packages: wshri_gui
+[7.765s]   Attempting uninstall: wshri_gui
+[7.767s]     Found existing installation: wshri_gui 0.0.1
+[7.769s] [0m[33m    WARNING: Could not access 'pyvenv.cfg' despite a virtual environment being active. Assuming global site-packages is not accessible in this environment.[0m[33m
+[7.771s]     Uninstalling wshri_gui-0.0.1:
+[7.771s] [0m[33m      WARNING: Cannot remove entries from nonexistent file /home/costin/ros2_wshri/hri_/install/wshri_gui/lib/python3.12/site-packages/easy-install.pth[0m[33m
+[7.772s]       Successfully uninstalled wshri_gui-0.0.1
+[7.779s] [0m[33m  WARNING: The script gui_server is installed in '/home/costin/ros2_wshri/hri_/install/wshri_gui/bin' which is not on PATH.
+[7.779s]   Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.[0m[33m
+[7.791s] Successfully installed wshri_gui-0.0.1
+[7.918s] running symlink_data
+[8.082s] Invoked command in '/home/costin/ros2_wshri/hri_/build/wshri_gui' returned '0': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/costin/ros2_wshri/hri_/build/wshri_gui/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/costin/ros2_wshri/hri_/install/wshri_gui/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/costin/ros2_wshri/hri_/build/wshri_gui/build --no-deps symlink_data

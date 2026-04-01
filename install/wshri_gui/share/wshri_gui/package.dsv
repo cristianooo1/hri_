@@ -1,0 +1,15 @@
+source;share/wshri_gui/hook/path.ps1
+source;share/wshri_gui/hook/path.dsv
+source;share/wshri_gui/hook/path.sh
+source;share/wshri_gui/hook/pythonpath.ps1
+source;share/wshri_gui/hook/pythonpath.dsv
+source;share/wshri_gui/hook/pythonpath.sh
+source;share/wshri_gui/hook/pythonscriptspath.ps1
+source;share/wshri_gui/hook/pythonscriptspath.dsv
+source;share/wshri_gui/hook/pythonscriptspath.sh
+source;share/wshri_gui/hook/ament_prefix_path.ps1
+source;share/wshri_gui/hook/ament_prefix_path.dsv
+source;share/wshri_gui/hook/ament_prefix_path.sh
+source;../../build/wshri_gui/share/wshri_gui/hook/pythonpath_develop.ps1
+source;../../build/wshri_gui/share/wshri_gui/hook/pythonpath_develop.dsv
+source;../../build/wshri_gui/share/wshri_gui/hook/pythonpath_develop.sh

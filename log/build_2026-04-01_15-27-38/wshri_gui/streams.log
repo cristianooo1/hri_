@@ -1,0 +1,18 @@
+[1.080s] Invoking command in '/home/costin/ros2_wshri/hri_/build/wshri_gui': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/costin/ros2_wshri/hri_/build/wshri_gui/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/costin/ros2_wshri/hri_/install/wshri_gui/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/costin/ros2_wshri/hri_/build/wshri_gui/build --no-deps symlink_data
+[1.410s] running develop
+[1.623s] running egg_info
+[1.643s] writing wshri_gui.egg-info/PKG-INFO
+[1.645s] writing dependency_links to wshri_gui.egg-info/dependency_links.txt
+[1.645s] writing entry points to wshri_gui.egg-info/entry_points.txt
+[1.646s] writing requirements to wshri_gui.egg-info/requires.txt
+[1.646s] writing top-level names to wshri_gui.egg-info/top_level.txt
+[1.687s] reading manifest file 'wshri_gui.egg-info/SOURCES.txt'
+[1.688s] writing manifest file 'wshri_gui.egg-info/SOURCES.txt'
+[1.710s] running build_ext
+[1.710s] Creating /home/costin/ros2_wshri/hri_/install/wshri_gui/lib/python3.12/site-packages/wshri-gui.egg-link (link to .)
+[1.711s] Adding wshri-gui 0.0.1 to easy-install.pth file
+[1.711s] Installing gui_server script to /home/costin/ros2_wshri/hri_/install/wshri_gui/lib/wshri_gui
+[1.711s] 
+[1.712s] Installed /home/costin/ros2_wshri/hri_/build/wshri_gui
+[1.712s] running symlink_data
+[1.744s] Invoked command in '/home/costin/ros2_wshri/hri_/build/wshri_gui' returned '0': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/costin/ros2_wshri/hri_/build/wshri_gui/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/costin/ros2_wshri/hri_/install/wshri_gui/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/costin/ros2_wshri/hri_/build/wshri_gui/build --no-deps symlink_data

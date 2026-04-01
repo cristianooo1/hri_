@@ -1,0 +1,38 @@
+running develop
+/home/costin/ros2_wshri/hri_/.venv/lib/python3.12/site-packages/setuptools/_distutils/cmd.py:90: DevelopDeprecationWarning: develop command is deprecated.
+!!
+
+        ********************************************************************************
+        Please avoid running ``setup.py`` and ``develop``.
+        Instead, use standards-based tools like pip or uv.
+
+        This deprecation is overdue, please update your project and remove deprecated
+        calls to avoid build errors in the future.
+
+        See https://github.com/pypa/setuptools/issues/917 for details.
+        ********************************************************************************
+
+!!
+  self.initialize_options()
+[33mWARNING: Skipping /usr/lib/python3.12/dist-packages/pybind11-2.11.1.dist-info due to invalid metadata entry 'name'[0m[33m
+Obtaining file:///home/costin/ros2_wshri/hri_/build/wshri_gui
+  Installing build dependencies ... [?25l- \ | done
+[?25h  Checking if build backend supports build_editable ... [?25ldone
+[?25h  Getting requirements to build editable ... [?25l- done
+[?25h  Preparing editable metadata (pyproject.toml) ... [?25l- done
+[?25hBuilding wheels for collected packages: wshri_gui
+  Building editable for wshri_gui (pyproject.toml) ... [?25l- done
+[?25h  Created wheel for wshri_gui: filename=wshri_gui-0.0.1-0.editable-py3-none-any.whl size=3306 sha256=2d569d233a8d642811238029d3cd1ced49c142afcb3d9c2416a1de609cb9a369
+  Stored in directory: /tmp/pip-ephem-wheel-cache-2r_o37in/wheels/f2/bc/b9/5c3db1045c0d49a5ab3a9a81cb31052d03fe3dbf1486a61b96
+Successfully built wshri_gui
+Installing collected packages: wshri_gui
+  Attempting uninstall: wshri_gui
+    Found existing installation: wshri_gui 0.0.1
+[0m[33m    WARNING: Could not access 'pyvenv.cfg' despite a virtual environment being active. Assuming global site-packages is not accessible in this environment.[0m[33m
+    Uninstalling wshri_gui-0.0.1:
+[0m[33m      WARNING: Cannot remove entries from nonexistent file /home/costin/ros2_wshri/hri_/install/wshri_gui/lib/python3.12/site-packages/easy-install.pth[0m[33m
+      Successfully uninstalled wshri_gui-0.0.1
+[0m[33m  WARNING: The script gui_server is installed in '/home/costin/ros2_wshri/hri_/install/wshri_gui/bin' which is not on PATH.
+  Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.[0m[33m
+Successfully installed wshri_gui-0.0.1
+running symlink_data

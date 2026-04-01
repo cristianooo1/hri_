@@ -7,8 +7,12 @@ const cameraStatus = document.getElementById("cameraStatus");
 const cameraFrame = document.querySelector(".camera-frame");
 const inputHint = document.querySelector(".input-hint");
 const sendBtn = chatForm?.querySelector(".send-btn");
+const micIndicator = document.getElementById("micIndicator");
+const llmStatus = document.getElementById("llmStatus");
 
-let listening = false;
+let micState = "idle";
+let uiLocked = false;
+let chatPending = false;
 let activeStream = null;
 
 function addMessage(type, text) {
@@ -32,13 +36,70 @@ function addMessage(type, text) {
 }
 
 function setChatPending(isPending) {
-  if (sendBtn) {
-    sendBtn.disabled = isPending;
-    sendBtn.textContent = isPending ? "Thinking..." : "Send";
+  chatPending = isPending;
+  applyInteractivity();
+}
+
+function setMicState(state, message) {
+  micState = state;
+  if (micBtn) {
+    micBtn.classList.toggle("listening", state === "recording");
+    const label = micBtn.querySelector("span");
+    if (label) {
+      label.textContent =
+        state === "recording" ? "Listening" : state === "processing" ? "Processing" : "Mic";
+    }
   }
 
-  if (chatInput) {
-    chatInput.disabled = isPending;
+  if (micIndicator) {
+    micIndicator.classList.remove("recording", "processing");
+    if (state === "recording") {
+      micIndicator.classList.add("recording");
+    } else if (state === "processing") {
+      micIndicator.classList.add("processing");
+    }
+  }
+
+  if (llmStatus) {
+    llmStatus.textContent =
+      message ||
+      (state === "recording"
+        ? "Recording... release Mic to stop"
+        : state === "processing"
+          ? "Transcribing + generating response"
+          : "Mic idle · Whisper ready on first use");
+  }
+
+  applyInteractivity();
+}
+
+function setUiLocked(isLocked) {
+  uiLocked = isLocked;
+  document.body.classList.toggle("ui-locked", isLocked);
+  applyInteractivity();
+}
+
+function applyInteractivity() {
+  const elements = document.querySelectorAll("button, input, select, textarea");
+  elements.forEach((element) => {
+    if (element === micBtn) {
+      return;
+    }
+
+    if (element === chatInput || element === sendBtn) {
+      element.disabled = uiLocked || chatPending;
+      return;
+    }
+
+    element.disabled = uiLocked;
+  });
+
+  if (micBtn) {
+    micBtn.disabled = micState === "processing";
+  }
+
+  if (sendBtn) {
+    sendBtn.textContent = chatPending ? "Thinking..." : "Send";
   }
 }
 
@@ -77,11 +138,72 @@ chatForm.addEventListener("submit", async (event) => {
   }
 });
 
-micBtn.addEventListener("click", () => {
-  listening = !listening;
-  micBtn.classList.toggle("listening", listening);
-  micBtn.querySelector("span").textContent = listening ? "Listening" : "Mic";
-});
+async function startRecording() {
+  setUiLocked(true);
+  setMicState("processing", "Starting mic...");
+  try {
+    const response = await fetch("/api/listen/start", { method: "POST" });
+    const payload = await response.json();
+    if (!response.ok) {
+      throw new Error(payload.error || "Failed to start recording.");
+    }
+    setMicState("recording", "Recording... release Mic to stop");
+  } catch (error) {
+    console.error("Start recording failed:", error);
+    addMessage("system", error.message || "Unable to start recording.");
+    setMicState("idle");
+    setUiLocked(false);
+  }
+}
+
+async function stopRecording() {
+  setMicState("processing", "Transcribing + generating response");
+  try {
+    const response = await fetch("/api/listen/stop", { method: "POST" });
+    const payload = await response.json();
+    if (!response.ok) {
+      throw new Error(payload.error || "Failed to process audio.");
+    }
+
+    if (payload.user_said) {
+      addMessage("user", payload.user_said);
+    }
+
+    if (payload.reply) {
+      const target = payload.user_said ? "assistant" : "system";
+      addMessage(target, payload.reply);
+    }
+  } catch (error) {
+    console.error("Stop recording failed:", error);
+    addMessage("system", error.message || "Unable to process the recording.");
+  } finally {
+    setMicState("idle");
+    setUiLocked(false);
+  }
+}
+
+if (micBtn) {
+  micBtn.addEventListener("pointerdown", (event) => {
+    if (micState !== "idle") {
+      return;
+    }
+    if (micBtn.setPointerCapture) {
+      micBtn.setPointerCapture(event.pointerId);
+    }
+    startRecording();
+  });
+
+  const handlePointerRelease = () => {
+    if (micState === "recording") {
+      stopRecording();
+    }
+  };
+
+  micBtn.addEventListener("pointerup", handlePointerRelease);
+  micBtn.addEventListener("pointerleave", handlePointerRelease);
+  micBtn.addEventListener("pointercancel", handlePointerRelease);
+  window.addEventListener("pointerup", handlePointerRelease);
+}
 
 async function startCamera() {
   if (!cameraStream || !cameraStatus || !cameraFrame) {
@@ -117,5 +239,5 @@ window.addEventListener("beforeunload", () => {
 startCamera();
 
 if (inputHint) {
-  inputHint.textContent = "Chat requests are sent to /api/llm on this GUI server.";
+  inputHint.textContent = "Hold Mic to talk (Whisper + TTS). Send uses /api/llm text-only.";
 }
