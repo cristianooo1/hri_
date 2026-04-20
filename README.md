@@ -26,6 +26,19 @@ GEMINI_API_KEY = "your_gemini_api_key"
 ```
 
 
+run the following command to find your microphone index:
+```
+uv run python -c "import speech_recognition as sr; [print(f'{i}: {n}') for i, n in enumerate(sr.Microphone.list_microphone_names())]"
+
+```
+
+then in the **llm.py** in the `record_task()` function insert the index of yout microphone:
+```
+try:
+            with sr.Microphone(device_index=4) as source:
+            ...
+```
+
 
 ```
 source /opt/ros/jazzy/setup.bash 

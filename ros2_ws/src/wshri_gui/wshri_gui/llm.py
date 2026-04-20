@@ -150,9 +150,13 @@ def start_recording():
     def record_task():
         global _recording_error
         r = sr.Recognizer()
+
+        r.energy_threshold = 150 
+        r.dynamic_energy_threshold = False
+
         try:
-            with sr.Microphone(sample_rate=_recording_sample_rate) as source:
-                r.adjust_for_ambient_noise(source, duration=0.5)
+            with sr.Microphone(device_index=4) as source:
+                # r.adjust_for_ambient_noise(source, duration=0.5)
                 print("--- MIC ACTIVE ---")
                 while _is_recording:
                     try:
@@ -197,15 +201,17 @@ def stop_and_transcribe():
         _recording_sample_rate,
         _recording_sample_width,
     )
-
+    print("--> Loading Whisper model (this may take a minute if downloading)...")
     model = get_whisper_model()
 
+    print("--> Transcribing audio on CPU...")
     segments, _ = model.transcribe(
         io.BytesIO(audio_data.get_wav_data()),
         beam_size=5,
     )
 
     result_text = " ".join([s.text for s in segments]).strip()
+    print(f"--> Transcribed: '{result_text}'")
 
     _recording_buffer = []
     _recorder_thread = None
