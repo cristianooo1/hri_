@@ -43,32 +43,49 @@ def _resolve_web_dir() -> Path:
 def _build_handler(web_dir: Path):
     class GuiRequestHandler(SimpleHTTPRequestHandler):
         def do_POST(self) -> None:  # noqa: N802 - stdlib hook name
-            
             # 1. PUSH-TO-TALK: START THE RECORDING
             if self.path == "/api/listen/start":
-                llm.start_recording()
+                try:
+                    llm.start_recording()
+                except Exception as exc:
+                    self._send_json(HTTPStatus.BAD_GATEWAY, {"error": str(exc)})
+                    return
+
                 self._send_json(HTTPStatus.OK, {"status": "recording_started"})
                 return
-            
-            # 2. PUSH-TO-TALK: STOP & PROCESS 
+
+            # 2. PUSH-TO-TALK: STOP & PROCESS
             elif self.path == "/api/listen/stop":
-                # Get text from Whisper
-                user_text = llm.stop_and_transcribe()
-                
+                try:
+                    user_text = llm.stop_and_transcribe()
+                except Exception as exc:
+                    self._send_json(HTTPStatus.BAD_GATEWAY, {"error": str(exc)})
+                    return
+
                 if not user_text:
                     self._send_json(HTTPStatus.OK, {"reply": "No audio detected."})
                     return
-                
-                ai_reply = llm.generate_response(user_text)
-                asyncio.run(llm.generate_and_play(ai_reply))
+
+                try:
+                    ai_reply = llm.generate_response(user_text)
+                except Exception as exc:
+                    self._send_json(HTTPStatus.BAD_GATEWAY, {"error": str(exc)})
+                    return
+
+                audio_error = ""
+                try:
+                    asyncio.run(llm.generate_and_play(ai_reply))
+                except Exception as exc:
+                    audio_error = str(exc)
 
                 self._send_json(HTTPStatus.OK, {
                     "user_said": user_text,
-                    "reply": ai_reply
+                    "reply": ai_reply,
+                    "audio_error": audio_error,
                 })
                 return
-            
-            # 3. TEXT-ONLY INTERACTION 
+
+            # 3. TEXT-ONLY INTERACTION
             elif self.path == "/api/llm":
                 content_length = int(self.headers.get("Content-Length", "0"))
                 raw_body = self.rfile.read(content_length)

@@ -173,6 +173,10 @@ async function stopRecording() {
       const target = payload.user_said ? "assistant" : "system";
       addMessage(target, payload.reply);
     }
+
+    if (payload.audio_error) {
+      addMessage("system", `Voice playback failed: ${payload.audio_error}`);
+    }
   } catch (error) {
     console.error("Stop recording failed:", error);
     addMessage("system", error.message || "Unable to process the recording.");
