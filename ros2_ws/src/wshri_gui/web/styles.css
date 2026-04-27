@@ -145,6 +145,34 @@ body {
   background-size: 24px 24px;
 }
 
+.grid.view-camera {
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+}
+
+.grid.view-camera [data-panel="objects"],
+.grid.view-camera [data-panel="control"],
+.grid.view-camera [data-panel="llm"] {
+  display: none;
+}
+
+.grid.view-camera [data-panel="camera"] {
+  min-height: 70vh;
+}
+
+.grid.view-camera .camera-frame {
+  min-height: 60vh;
+}
+
+.grid.view-manual {
+  grid-template-columns: 1fr 1fr;
+}
+
+.grid.view-manual [data-panel="objects"],
+.grid.view-manual [data-panel="camera"] {
+  display: none;
+}
+
 .panel {
   border-radius: 18px;
   padding: 18px;
@@ -215,21 +243,48 @@ body {
   flex-wrap: wrap;
   gap: 12px;
   padding: 8px 0 14px;
+  min-height: 92px;
+}
+
+.detection-status {
+  font-size: 13px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.35);
+  border: 1px solid rgba(0, 0, 0, 0.12);
 }
 
 .fruit {
-  width: 72px;
-  height: 72px;
+  min-width: 154px;
+  min-height: 72px;
   background: rgba(255, 255, 255, 0.4);
   border-radius: 14px;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
   border: 2px solid rgba(0, 0, 0, 0.2);
 }
 
 .fruit svg {
   width: 56px;
   height: 56px;
+}
+
+.fruit-info {
+  display: grid;
+  gap: 2px;
+}
+
+.fruit-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.fruit-sub {
+  font-size: 11px;
+  opacity: 0.75;
 }
 
 .object-meta {
@@ -298,6 +353,7 @@ body {
   overflow: hidden;
 }
 
+.camera-frame img,
 .camera-frame video {
   position: absolute;
   inset: 0;
@@ -308,6 +364,7 @@ body {
   transition: opacity 0.4s ease;
 }
 
+.camera-frame.live img,
 .camera-frame.live video {
   opacity: 1;
 }

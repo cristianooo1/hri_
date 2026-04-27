@@ -17,9 +17,9 @@
           </div>
         </div>
         <nav class="tabs" aria-label="Primary navigation">
-          <button class="tab active" type="button">Overview</button>
-          <button class="tab" type="button">Camera</button>
-          <button class="tab" type="button">Manual control</button>
+          <button class="tab active" type="button" data-view="overview">Overview</button>
+          <button class="tab" type="button" data-view="camera">Camera</button>
+          <button class="tab" type="button" data-view="manual">Manual control</button>
         </nav>
         <div class="status" aria-label="Topic status">
           <span class="chip online">/camera</span>
@@ -29,57 +29,17 @@
       </header>
 
       <main class="grid">
-        <section class="panel objects">
+        <section class="panel objects" data-panel="objects">
           <div class="panel-header">
             <h2>Objects detected</h2>
             <div class="panel-sub">Confidence stream</div>
           </div>
-          <div class="object-shelf" aria-label="Detected fruit list">
-            <div class="fruit apple" title="Apple">
-              <svg viewBox="0 0 64 64" role="img" aria-label="Apple">
-                <path d="M40 10c-5 2-7 6-7 6s7 2 12-2 4-10 4-10-4 2-9 6z" fill="#2e7d32" />
-                <path d="M34 12c-4 3-4 7-4 7s5-1 8-5 1-9 1-9-2 2-5 7z" fill="#1b5e20" />
-                <path d="M19 23c-8 6-9 18-4 27 5 10 18 12 27 7 9-5 13-16 9-26-4-10-16-15-25-8-2-2-5-3-7-0z" fill="#e53935" />
-                <circle cx="30" cy="36" r="8" fill="#ff7043" opacity="0.4" />
-              </svg>
-            </div>
-            <div class="fruit pineapple" title="Pineapple">
-              <svg viewBox="0 0 64 64" role="img" aria-label="Pineapple">
-                <path d="M22 16l6 4 4-6 4 6 6-4-4 8 7 2-7 2 4 8-6-4-4 6-4-6-6 4 4-8-7-2 7-2-4-8z" fill="#2e7d32" />
-                <path d="M22 30c-6 6-6 14-2 20s12 10 18 8 10-10 8-18-10-14-16-10-6-2-8 0z" fill="#f9a825" />
-                <path d="M26 34l12 16" stroke="#c17900" stroke-width="2" />
-                <path d="M38 34l-12 16" stroke="#c17900" stroke-width="2" />
-              </svg>
-            </div>
-            <div class="fruit orange" title="Orange">
-              <svg viewBox="0 0 64 64" role="img" aria-label="Orange">
-                <circle cx="32" cy="32" r="18" fill="#fb8c00" />
-                <circle cx="26" cy="26" r="6" fill="#ffa726" opacity="0.6" />
-                <path d="M33 10c-2 4 1 7 1 7s4-2 5-6-1-7-1-7-3 2-5 6z" fill="#2e7d32" />
-              </svg>
-            </div>
-            <div class="fruit banana" title="Banana">
-              <svg viewBox="0 0 64 64" role="img" aria-label="Banana">
-                <path d="M10 36c10 10 26 12 38 4 5-3 8-7 10-12-8 6-16 8-26 6-12-2-18-8-22-16-2 8-1 14 0 18z" fill="#fdd835" />
-                <path d="M12 36c8 8 22 10 32 4" stroke="#f9a825" stroke-width="2" />
-              </svg>
-            </div>
-            <div class="fruit pear" title="Pear">
-              <svg viewBox="0 0 64 64" role="img" aria-label="Pear">
-                <path d="M30 12c-4 4-3 8-3 8s6 0 9-4 2-9 2-9-4 1-8 5z" fill="#558b2f" />
-                <path d="M28 18c-10 8-12 24-4 32s22 8 28 0 2-22-8-28c2-4 0-8-6-8-4 0-7 2-10 4z" fill="#8bc34a" />
-                <circle cx="38" cy="42" r="6" fill="#aed581" opacity="0.6" />
-              </svg>
-            </div>
-          </div>
-          <div class="object-meta">
-            <div class="meta-card">Apples: 1</div>
-            <div class="meta-card">Oranges: 2</div>
-            <div class="meta-card">Other: 2</div>
-          </div>
+          <div class="detection-status" id="detectionStatus">Waiting for CV feed...</div>
+          <div class="object-shelf" id="objectShelf" aria-label="Detected fruit list"></div>
+          <div class="object-meta" id="objectMeta"></div>
         </section>
 
-        <section class="panel control">
+        <section class="panel control" data-panel="control">
           <div class="panel-header">
             <h2>Robot control</h2>
             <div class="panel-sub">Quick actions</div>
@@ -97,13 +57,13 @@
           <div class="control-hint">Manual, auto, and hand-guided modes can map here.</div>
         </section>
 
-        <section class="panel camera">
+        <section class="panel camera" data-panel="camera">
           <div class="panel-header">
             <h2>Camera output</h2>
-            <div class="panel-sub">Live feed placeholder</div>
+            <div class="panel-sub">Backend live camera</div>
           </div>
           <div class="camera-frame">
-            <video id="cameraStream" playsinline autoplay muted></video>
+            <img id="cameraStream" alt="Camera stream" />
             <div class="camera-overlay">
               <div class="camera-label">UR3 table view</div>
               <div class="camera-status" id="cameraStatus">No stream attached</div>
@@ -112,7 +72,7 @@
           </div>
         </section>
 
-        <section class="panel llm">
+        <section class="panel llm" data-panel="llm">
           <div class="panel-header">
             <h2>LLM communication</h2>
             <div class="panel-sub">Text + speech</div>

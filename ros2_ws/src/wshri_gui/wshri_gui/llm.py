@@ -156,7 +156,11 @@ def start_recording():
 
         try:
             with sr.Microphone(device_index=4) as source:
+<<<<<<< HEAD
                 # r.adjust_for_ambient_noise(source, duration=0.5)
+=======
+                r.adjust_for_ambient_noise(source, duration=0.5)
+>>>>>>> 4c20620 (GUI + llm + cv)
                 print("--- MIC ACTIVE ---")
                 while _is_recording:
                     try:

@@ -5,6 +5,11 @@ const micBtn = document.getElementById("micBtn");
 const cameraStream = document.getElementById("cameraStream");
 const cameraStatus = document.getElementById("cameraStatus");
 const cameraFrame = document.querySelector(".camera-frame");
+const grid = document.querySelector(".grid");
+const tabs = document.querySelectorAll(".tab[data-view]");
+const objectShelf = document.getElementById("objectShelf");
+const objectMeta = document.getElementById("objectMeta");
+const detectionStatus = document.getElementById("detectionStatus");
 const inputHint = document.querySelector(".input-hint");
 const sendBtn = chatForm?.querySelector(".send-btn");
 const micIndicator = document.getElementById("micIndicator");
@@ -13,7 +18,34 @@ const llmStatus = document.getElementById("llmStatus");
 let micState = "idle";
 let uiLocked = false;
 let chatPending = false;
-let activeStream = null;
+let cameraTimer = null;
+let cameraFramePending = false;
+let lastCameraFrameAt = 0;
+
+const fruitIcons = {
+  apple: "🍎",
+  banana: "🍌",
+  orange: "🍊",
+  broccoli: "🥦",
+  carrot: "🥕",
+};
+
+function setView(view) {
+  if (!grid) {
+    return;
+  }
+
+  grid.classList.remove("view-camera", "view-manual");
+  if (view === "camera") {
+    grid.classList.add("view-camera");
+  } else if (view === "manual") {
+    grid.classList.add("view-manual");
+  }
+
+  tabs.forEach((tab) => {
+    tab.classList.toggle("active", tab.dataset.view === view);
+  });
+}
 
 function addMessage(type, text) {
   const msg = document.createElement("div");
@@ -209,38 +241,148 @@ if (micBtn) {
   window.addEventListener("pointerup", handlePointerRelease);
 }
 
+tabs.forEach((tab) => {
+  tab.addEventListener("click", () => {
+    setView(tab.dataset.view || "overview");
+  });
+});
+
 async function startCamera() {
   if (!cameraStream || !cameraStatus || !cameraFrame) {
     return;
   }
 
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    cameraStatus.textContent = "Camera unavailable";
+  const refreshFrame = () => {
+    if (cameraFramePending) {
+      return;
+    }
+
+    cameraFramePending = true;
+    cameraStream.src = `/api/camera_frame?t=${Date.now()}`;
+  };
+
+  cameraStream.onload = () => {
+    cameraFramePending = false;
+    lastCameraFrameAt = Date.now();
+    cameraFrame.classList.add("live");
+    cameraStatus.textContent = "Camera live";
+  };
+
+  cameraStream.onerror = () => {
+    cameraFramePending = false;
+    cameraStatus.textContent = "Camera frame unavailable";
+  };
+
+  if (cameraTimer) {
+    window.clearInterval(cameraTimer);
+  }
+
+  cameraTimer = window.setInterval(() => {
+    refreshFrame();
+    if (lastCameraFrameAt && Date.now() - lastCameraFrameAt > 1500) {
+      cameraStatus.textContent = "Camera stream stalled";
+    }
+  }, 200);
+
+  refreshFrame();
+}
+
+function renderDetections(payload) {
+  if (!objectShelf || !objectMeta || !detectionStatus) {
     return;
   }
 
-  try {
-    activeStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "environment" },
-      audio: false,
+  const objects = Array.isArray(payload.objects) ? payload.objects : [];
+  const counts = objects.reduce((acc, item) => {
+    acc[item.label] = (acc[item.label] || 0) + 1;
+    return acc;
+  }, {});
+
+  detectionStatus.textContent =
+    payload.status === "error"
+      ? `CV error: ${payload.error || "unknown"}`
+      : payload.status === "loading"
+        ? "Loading detection model..."
+        : `${objects.length} stable object${objects.length === 1 ? "" : "s"} detected`;
+
+  objectShelf.replaceChildren();
+  objectMeta.replaceChildren();
+
+  if (!objects.length) {
+    const emptyCard = document.createElement("div");
+    emptyCard.className = "meta-card";
+    emptyCard.textContent = payload.status === "running" ? "No stable detections yet" : "Waiting for detections";
+    objectShelf.appendChild(emptyCard);
+  }
+
+  objects.forEach((item) => {
+    const card = document.createElement("div");
+    card.className = `fruit ${item.label || ""}`;
+    card.title = `${item.label} ${item.confidence}`;
+
+    const icon = document.createElement("div");
+    icon.textContent = fruitIcons[item.label] || "📦";
+    icon.style.fontSize = "32px";
+
+    const info = document.createElement("div");
+    info.className = "fruit-info";
+
+    const label = document.createElement("div");
+    label.className = "fruit-label";
+    label.textContent = item.label || "unknown";
+
+    const sub = document.createElement("div");
+    sub.className = "fruit-sub";
+    sub.textContent = `${item.position_tag || "unknown"} · ${Math.round((item.confidence || 0) * 100)}%`;
+
+    info.append(label, sub);
+    card.replaceChildren(icon, info);
+    objectShelf.appendChild(card);
+  });
+
+  Object.entries(counts)
+    .sort(([left], [right]) => left.localeCompare(right))
+    .forEach(([label, count]) => {
+      const meta = document.createElement("div");
+      meta.className = "meta-card";
+      meta.textContent = `${label}: ${count}`;
+      objectMeta.appendChild(meta);
     });
-    cameraStream.srcObject = activeStream;
-    cameraFrame.classList.add("live");
-    cameraStatus.textContent = "Live camera";
+}
+
+async function pollDetections() {
+  try {
+    const response = await fetch("/api/detections", { cache: "no-store" });
+    const payload = await response.json();
+    if (!response.ok) {
+      throw new Error(payload.error || "Failed to load detections.");
+    }
+    renderDetections(payload);
+    if (cameraStatus) {
+      if (payload.status === "error") {
+        cameraStatus.textContent = "Camera live · CV error";
+      } else if (payload.frame_id > 0 && lastCameraFrameAt) {
+        cameraStatus.textContent = `Camera live · CV frame ${payload.frame_id}`;
+      }
+    }
   } catch (error) {
-    console.warn("Camera access failed:", error);
-    cameraStatus.textContent = "Camera blocked";
+    if (detectionStatus) {
+      detectionStatus.textContent = error.message || "Failed to load detections.";
+    }
+  } finally {
+    window.setTimeout(pollDetections, 800);
   }
 }
 
-window.addEventListener("beforeunload", () => {
-  if (!activeStream) {
-    return;
-  }
-  activeStream.getTracks().forEach((track) => track.stop());
-});
-
 startCamera();
+pollDetections();
+setView("overview");
+
+window.addEventListener("beforeunload", () => {
+  if (cameraTimer) {
+    window.clearInterval(cameraTimer);
+  }
+});
 
 if (inputHint) {
   inputHint.textContent = "Hold Mic to talk (Whisper + TTS). Send uses /api/llm text-only.";
