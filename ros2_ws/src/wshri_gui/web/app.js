@@ -79,7 +79,11 @@ function setMicState(state, message) {
     const label = micBtn.querySelector("span");
     if (label) {
       label.textContent =
-        state === "recording" ? "Listening" : state === "processing" ? "Processing" : "Mic";
+        state === "recording"
+          ? "Listening"
+          : state === "processing"
+            ? "Processing"
+            : "Mic";
     }
   }
 
@@ -258,14 +262,14 @@ async function startCamera() {
     }
 
     cameraFramePending = true;
-    cameraStream.src = `/api/camera_frame?t=${Date.now()}`;
+    cameraStream.src = `/api/cv_frame?t=${Date.now()}`;
   };
 
   cameraStream.onload = () => {
     cameraFramePending = false;
     lastCameraFrameAt = Date.now();
     cameraFrame.classList.add("live");
-    cameraStatus.textContent = "Camera live";
+    // cameraStatus.textContent = "Camera live";
   };
 
   cameraStream.onerror = () => {
@@ -311,7 +315,10 @@ function renderDetections(payload) {
   if (!objects.length) {
     const emptyCard = document.createElement("div");
     emptyCard.className = "meta-card";
-    emptyCard.textContent = payload.status === "running" ? "No stable detections yet" : "Waiting for detections";
+    emptyCard.textContent =
+      payload.status === "running"
+        ? "No stable detections yet"
+        : "Waiting for detections";
     objectShelf.appendChild(emptyCard);
   }
 
@@ -358,16 +365,17 @@ async function pollDetections() {
       throw new Error(payload.error || "Failed to load detections.");
     }
     renderDetections(payload);
-    if (cameraStatus) {
-      if (payload.status === "error") {
-        cameraStatus.textContent = "Camera live · CV error";
-      } else if (payload.frame_id > 0 && lastCameraFrameAt) {
-        cameraStatus.textContent = `Camera live · CV frame ${payload.frame_id}`;
-      }
-    }
+    // if (cameraStatus) {
+    //   if (payload.status === "error") {
+    //     cameraStatus.textContent = "Camera live · CV error";
+    //   } else if (payload.frame_id > 0 && lastCameraFrameAt) {
+    //     cameraStatus.textContent = `Camera live · CV frame ${payload.frame_id}`;
+    //   }
+    // }
   } catch (error) {
     if (detectionStatus) {
-      detectionStatus.textContent = error.message || "Failed to load detections.";
+      detectionStatus.textContent =
+        error.message || "Failed to load detections.";
     }
   } finally {
     window.setTimeout(pollDetections, 800);
@@ -385,5 +393,6 @@ window.addEventListener("beforeunload", () => {
 });
 
 if (inputHint) {
-  inputHint.textContent = "Hold Mic to talk (Whisper + TTS). Send uses /api/llm text-only.";
+  inputHint.textContent =
+    "Hold Mic to talk (Whisper + TTS). Send uses /api/llm text-only.";
 }

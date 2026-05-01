@@ -97,6 +97,7 @@ class CvRuntime:
 
             frame_id = 0
             self._set_status("running", "")
+            last_seen = []
 
             while self._running:
                 ret, frame = cap.read()
@@ -111,27 +112,24 @@ class CvRuntime:
                 stable_tracks = cv_module.add_position_tags(stable_tracks, frame.shape)
                 scene_summary = cv_module.build_scene_summary(stable_tracks)
 
+                current_seen = sorted([t["label"] for t in stable_tracks])
+                if current_seen != last_seen:
+                    print(f"\n[SCENE CHANGE] Now seeing: {current_seen}")
+                    last_seen = current_seen
+
                 raw_ok, raw_encoded = cv2.imencode(".jpg", frame)
-                annotated = cv_module.draw_grid(frame.copy())
+                # annotated = cv_module.draw_grid(frame.copy())
+                annotated = frame.copy()
                 annotated = cv_module.draw_tracks(annotated, stable_tracks)
                 frame_id += 1
-
-                info_text = f"RAW: {len(raw_detections)} | STABLE: {len(stable_tracks)}"
-                cv2.putText(
-                    annotated,
-                    info_text,
-                    (20, 30),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.8,
-                    (255, 255, 0),
-                    2,
-                )
 
                 ok, encoded = cv2.imencode(".jpg", annotated)
                 if not ok:
                     continue
 
                 packet = cv_module.build_scene_packet(frame_id, scene_summary)
+                if frame_id % 30 == 0 and len(stable_tracks) > 0:
+                    print(f"[SERVER] Heartbeat: Frame {frame_id} | Stabilized Objects: {[t['label'] for t in stable_tracks]}")
                 with self._lock:
                     self._latest_packet = packet
                     self._latest_jpeg = encoded.tobytes()
@@ -166,6 +164,8 @@ class CvRuntime:
 
 def _build_handler(web_dir: Path, cv_runtime: CvRuntime):
     class GuiRequestHandler(SimpleHTTPRequestHandler):
+        def log_message(self, format, *args):
+            pass
         def end_headers(self) -> None:
             self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
             self.send_header("Pragma", "no-cache")

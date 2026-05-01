@@ -26,7 +26,7 @@ except ImportError:
 # =========================================================
 TARGET_CLASSES = {"banana", "apple", "orange", "broccoli", "carrot"}
 
-MIN_CONF = 0.60
+MIN_CONF = 0.30
 PRINT_EVERY_N_FRAMES = 15
 
 MIN_STABLE_FRAMES = 3
@@ -208,7 +208,7 @@ def build_scene_packet(frame_id, scene_summary):
 # =========================================================
 # 3) LOAD MODEL
 # =========================================================
-def load_model(model_path="yolo11n.pt"):
+def load_model(model_path="yolo11s.pt"):
     if YOLO is None:
         raise RuntimeError("ultralytics is not installed on the GUI host.")
     return YOLO(model_path)
@@ -217,7 +217,9 @@ def load_model(model_path="yolo11n.pt"):
 # =========================================================
 # 4) RAW FRAME DETECTION
 # =========================================================
+_last_raw_labels = []
 def process_frame(model, frame):
+    global _last_raw_labels
     """
     Return raw detections:
     [
@@ -243,9 +245,11 @@ def process_frame(model, frame):
             label = names[cls_id]
 
             if label not in TARGET_CLASSES:
+                # print(f"[DEBUG FILTER] Ignored {label} (not a target class)")
                 continue
 
             if conf < MIN_CONF:
+                # print(f"[DEBUG FILTER] Ignored {label} (low confidence: {conf:.2f})")
                 continue
 
             if box.id is None:
@@ -265,6 +269,14 @@ def process_frame(model, frame):
                 "center_px": [cx, cy],
             })
 
+            # current_labels = sorted([d["label"] for d in detections])
+            # if current_labels != _last_raw_labels:
+            #     if current_labels:
+            #         print(f"[CV] Detections changed: {current_labels}")
+            #     else:
+            #         print(f"[CV] Scene cleared (no objects seen)")
+            #     _last_raw_labels = current_labels
+
     return detections
 
 
@@ -277,8 +289,10 @@ class TrackStabilizer:
         self.max_missing_frames = max_missing_frames
         self.smoothing_alpha = smoothing_alpha
         self.tracks = {}
+        self.frame_counter = 0
 
     def update(self, detections):
+        self.frame_counter += 1
         # First assume every stored track is missing in this frame
         for track in self.tracks.values():
             track["missing_frames"] += 1
@@ -334,6 +348,10 @@ class TrackStabilizer:
             if track["status"] == "stable":
                 stable_tracks.append(track.copy())
 
+        if stable_tracks and self.frame_counter % 30 == 0:
+            stable_labels = [t["label"] for t in stable_tracks]
+            print(f"[DEBUG STABLE] OBJECTS DETECTED: {stable_labels} (Frame {self.frame_counter})")
+
         return stable_tracks
 
 
@@ -362,35 +380,23 @@ def draw_grid(frame):
 def draw_tracks(frame, tracks):
     for track in tracks:
         x1, y1, x2, y2 = track["bbox"]
-        cx, cy = track["center_px"]
-        position_tag = track.get("position_tag", "unknown")
+        
+        # Only show the label and confidence (e.g., "apple 0.84")
+        text = f"{track['label']} {track['confidence']:.2f}"
 
-        text1 = f"T{track['track_id']} {track['label']} {track['confidence']:.2f}"
-        text2 = position_tag
-
+        # Draw the bounding box (Green)
         cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
+        # Draw the text just above the box
         cv2.putText(
             frame,
-            text1,
-            (x1, max(y1 - 28, 20)),
+            text,
+            (x1, max(y1 - 8, 20)),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.55,
             (0, 255, 0),
             2
         )
-
-        cv2.putText(
-            frame,
-            text2,
-            (x1, max(y1 - 8, 20)),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.55,
-            (0, 255, 255),
-            2
-        )
-
-        cv2.circle(frame, (cx, cy), 4, (0, 0, 255), -1)
 
     return frame
 

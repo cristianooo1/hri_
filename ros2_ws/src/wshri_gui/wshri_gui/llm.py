@@ -156,15 +156,11 @@ def start_recording():
 
         try:
             with sr.Microphone(device_index=4) as source:
-<<<<<<< HEAD
                 # r.adjust_for_ambient_noise(source, duration=0.5)
-=======
-                r.adjust_for_ambient_noise(source, duration=0.5)
->>>>>>> 4c20620 (GUI + llm + cv)
                 print("--- MIC ACTIVE ---")
                 while _is_recording:
                     try:
-                        audio = r.listen(source, phrase_time_limit=1, timeout=1)
+                        audio = r.listen(source, phrase_time_limit=5, timeout=1)
                         _recording_buffer.append(
                             audio.get_raw_data(
                                 convert_rate=_recording_sample_rate,
@@ -212,6 +208,9 @@ def stop_and_transcribe():
     segments, _ = model.transcribe(
         io.BytesIO(audio_data.get_wav_data()),
         beam_size=5,
+        language="en",     # 1. Force English to stop foreign character hallucinations
+        vad_filter=True,
+        initial_prompt="robot, arm, pick, place, apple, banana, orange, broccoli, carrot."
     )
 
     result_text = " ".join([s.text for s in segments]).strip()
@@ -221,3 +220,8 @@ def stop_and_transcribe():
     _recorder_thread = None
 
     return result_text
+
+
+if WhisperModel is not None:
+    print("Pre-loading Whisper model into memory...")
+    get_whisper_model()

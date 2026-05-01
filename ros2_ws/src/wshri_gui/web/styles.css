@@ -38,7 +38,11 @@ body {
   border: 3px solid var(--panel-border);
   border-radius: 18px;
   overflow: hidden;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.3));
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.6),
+    rgba(255, 255, 255, 0.3)
+  );
   box-shadow: 0 24px 60px rgba(60, 45, 20, 0.2);
 }
 
@@ -137,10 +141,8 @@ body {
   grid-template-rows: minmax(220px, auto) 1fr;
   gap: 18px;
   padding: 20px;
-  background-image: linear-gradient(
-      rgba(255, 255, 255, 0.35) 1px,
-      transparent 1px
-    ),
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.35) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.35) 1px, transparent 1px);
   background-size: 24px 24px;
 }
@@ -314,7 +316,9 @@ body {
   background: rgba(255, 255, 255, 0.35);
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .control-btn:hover {
@@ -348,7 +352,11 @@ body {
   min-height: 260px;
   border-radius: 14px;
   border: 2px dashed rgba(0, 0, 0, 0.4);
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(0, 0, 0, 0.05));
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.3),
+    rgba(0, 0, 0, 0.05)
+  );
   position: relative;
   overflow: hidden;
 }

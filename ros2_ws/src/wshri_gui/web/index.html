@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -13,36 +13,38 @@
           <div class="brand-mark" aria-hidden="true"></div>
           <div class="brand-text">
             <span>Robot Assistant</span>
-            <small>Menu Bar</small>
           </div>
         </div>
         <nav class="tabs" aria-label="Primary navigation">
-          <button class="tab active" type="button" data-view="overview">Overview</button>
+          <button class="tab active" type="button" data-view="overview">
+            Overview
+          </button>
           <button class="tab" type="button" data-view="camera">Camera</button>
-          <button class="tab" type="button" data-view="manual">Manual control</button>
+          <button class="tab" type="button" data-view="manual">
+            Manual control
+          </button>
         </nav>
-        <div class="status" aria-label="Topic status">
-          <span class="chip online">/camera</span>
-          <span class="chip warn">/detections</span>
-          <span class="chip online">/llm</span>
-        </div>
       </header>
 
       <main class="grid">
         <section class="panel objects" data-panel="objects">
           <div class="panel-header">
             <h2>Objects detected</h2>
-            <div class="panel-sub">Confidence stream</div>
           </div>
-          <div class="detection-status" id="detectionStatus">Waiting for CV feed...</div>
-          <div class="object-shelf" id="objectShelf" aria-label="Detected fruit list"></div>
+          <div class="detection-status" id="detectionStatus">
+            Waiting for CV feed...
+          </div>
+          <div
+            class="object-shelf"
+            id="objectShelf"
+            aria-label="Detected fruit list"
+          ></div>
           <div class="object-meta" id="objectMeta"></div>
         </section>
 
         <section class="panel control" data-panel="control">
           <div class="panel-header">
             <h2>Robot control</h2>
-            <div class="panel-sub">Quick actions</div>
           </div>
           <div class="control-grid">
             <button class="control-btn" type="button">Home</button>
@@ -54,50 +56,72 @@
             <label for="speed" class="slider-label">Arm speed</label>
             <input id="speed" type="range" min="0" max="100" value="45" />
           </div>
-          <div class="control-hint">Manual, auto, and hand-guided modes can map here.</div>
         </section>
 
         <section class="panel camera" data-panel="camera">
           <div class="panel-header">
             <h2>Camera output</h2>
-            <div class="panel-sub">Backend live camera</div>
           </div>
           <div class="camera-frame">
             <img id="cameraStream" alt="Camera stream" />
             <div class="camera-overlay">
-              <div class="camera-label">UR3 table view</div>
-              <div class="camera-status" id="cameraStatus">No stream attached</div>
+              <div class="camera-status" id="cameraStatus">
+                No stream attached
+              </div>
             </div>
-            <div class="scanlines" aria-hidden="true"></div>
           </div>
         </section>
 
         <section class="panel llm" data-panel="llm">
           <div class="panel-header">
             <h2>LLM communication</h2>
-            <div class="panel-sub">Text + speech</div>
           </div>
           <div class="chat-log" id="chatLog" aria-live="polite">
             <div class="msg system">
               <div class="msg-label">System</div>
-              <div class="msg-body">Hello, I can explain the workspace or take commands.</div>
-            </div>
-            <div class="msg assistant">
-              <div class="msg-label">Assistant</div>
-              <div class="msg-body">Try: "Pick the orange on the right".</div>
+              <div class="msg-body">
+                Hello, I can explain the workspace or take commands.
+              </div>
             </div>
           </div>
           <div class="llm-status">
-            <span class="status-dot" id="micIndicator" aria-hidden="true"></span>
-            <span id="llmStatus">Mic idle · Whisper ready on first use</span>
+            <span
+              class="status-dot"
+              id="micIndicator"
+              aria-hidden="true"
+            ></span>
+            <span id="llmStatus">Mic idle · Whisper ready</span>
           </div>
           <form class="chat-input" id="chatForm">
-            <button class="mic-btn" id="micBtn" type="button" aria-label="Toggle speech input">
+            <button
+              class="mic-btn"
+              id="micBtn"
+              type="button"
+              aria-label="Toggle speech input"
+            >
               <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 4a3 3 0 0 1 3 3v4a3 3 0 0 1-6 0V7a3 3 0 0 1 3-3z" fill="currentColor" />
-                <path d="M6 11a6 6 0 0 0 12 0" fill="none" stroke="currentColor" stroke-width="2" />
-                <path d="M12 17v3" fill="none" stroke="currentColor" stroke-width="2" />
-                <path d="M8 20h8" fill="none" stroke="currentColor" stroke-width="2" />
+                <path
+                  d="M12 4a3 3 0 0 1 3 3v4a3 3 0 0 1-6 0V7a3 3 0 0 1 3-3z"
+                  fill="currentColor"
+                />
+                <path
+                  d="M6 11a6 6 0 0 0 12 0"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                />
+                <path
+                  d="M12 17v3"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                />
+                <path
+                  d="M8 20h8"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                />
               </svg>
               <span>Mic</span>
             </button>
@@ -110,7 +134,6 @@
             />
             <button class="send-btn" type="submit">Send</button>
           </form>
-          <div class="input-hint">Use Mic to start/stop Whisper, or type a command.</div>
         </section>
       </main>
     </div>
