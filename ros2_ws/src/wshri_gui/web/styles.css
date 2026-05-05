@@ -147,6 +147,30 @@ body {
   background-size: 24px 24px;
 }
 
+.grid.view-overview {
+  grid-template-columns: 1.05fr 0.95fr;
+  grid-template-areas:
+    "objects llm"
+    "camera llm";
+}
+
+.grid.view-overview [data-panel="objects"] {
+  grid-area: objects;
+}
+
+.grid.view-overview [data-panel="camera"] {
+  grid-area: camera;
+}
+
+.grid.view-overview [data-panel="llm"] {
+  grid-area: llm;
+  min-height: 100%;
+}
+
+.grid.view-overview [data-panel="control"] {
+  display: none;
+}
+
 .grid.view-camera {
   grid-template-columns: 1fr;
   grid-template-rows: 1fr;
@@ -168,11 +192,20 @@ body {
 
 .grid.view-manual {
   grid-template-columns: 1fr 1fr;
+  grid-template-areas: "control llm";
 }
 
 .grid.view-manual [data-panel="objects"],
 .grid.view-manual [data-panel="camera"] {
   display: none;
+}
+
+.grid.view-manual [data-panel="control"] {
+  grid-area: control;
+}
+
+.grid.view-manual [data-panel="llm"] {
+  grid-area: llm;
 }
 
 .panel {
@@ -309,6 +342,12 @@ body {
   gap: 12px;
 }
 
+.manual-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
 .control-btn {
   padding: 10px;
   border-radius: 12px;
@@ -346,6 +385,11 @@ body {
   margin-top: 10px;
   font-size: 12px;
   color: rgba(20, 20, 20, 0.7);
+}
+
+.fruit-pick {
+  min-height: 54px;
+  font-size: 15px;
 }
 
 .camera-frame {
@@ -541,6 +585,62 @@ body {
   font-size: 12px;
   text-align: center;
   color: rgba(20, 20, 20, 0.7);
+}
+
+.confirm-modal {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(20, 16, 8, 0.32);
+  backdrop-filter: blur(4px);
+  z-index: 20;
+}
+
+.confirm-modal.hidden {
+  display: none;
+}
+
+.confirm-card {
+  width: min(360px, calc(100vw - 32px));
+  padding: 22px;
+  border-radius: 18px;
+  border: 2px solid var(--panel-border);
+  background: linear-gradient(180deg, #fff5e7, #f1dcc0);
+  box-shadow: 0 18px 40px rgba(40, 24, 8, 0.28);
+}
+
+.confirm-card h3 {
+  margin: 0 0 8px;
+  font-family: var(--font-display);
+  font-size: 28px;
+}
+
+.confirm-card p {
+  margin: 0 0 18px;
+  line-height: 1.4;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.confirm-btn {
+  flex: 1;
+  min-height: 44px;
+  border: 2px solid rgba(0, 0, 0, 0.18);
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.confirm-btn.yes {
+  background: #8db84a;
+}
+
+.confirm-btn.no {
+  background: #e7c8a1;
 }
 
 @keyframes panelIn {

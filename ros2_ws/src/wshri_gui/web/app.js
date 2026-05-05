@@ -14,6 +14,11 @@ const inputHint = document.querySelector(".input-hint");
 const sendBtn = chatForm?.querySelector(".send-btn");
 const micIndicator = document.getElementById("micIndicator");
 const llmStatus = document.getElementById("llmStatus");
+const fruitPickButtons = document.querySelectorAll(".fruit-pick");
+const confirmModal = document.getElementById("confirmModal");
+const confirmText = document.getElementById("confirmText");
+const confirmYes = document.getElementById("confirmYes");
+const confirmNo = document.getElementById("confirmNo");
 
 let micState = "idle";
 let uiLocked = false;
@@ -21,6 +26,8 @@ let chatPending = false;
 let cameraTimer = null;
 let cameraFramePending = false;
 let lastCameraFrameAt = 0;
+let latestDetections = [];
+let selectedFruit = "";
 
 const fruitIcons = {
   apple: "🍎",
@@ -35,16 +42,39 @@ function setView(view) {
     return;
   }
 
-  grid.classList.remove("view-camera", "view-manual");
+  grid.classList.remove("view-overview", "view-camera", "view-manual");
   if (view === "camera") {
     grid.classList.add("view-camera");
   } else if (view === "manual") {
     grid.classList.add("view-manual");
+  } else {
+    grid.classList.add("view-overview");
   }
 
   tabs.forEach((tab) => {
     tab.classList.toggle("active", tab.dataset.view === view);
   });
+}
+
+function openConfirmModal(fruit) {
+  selectedFruit = fruit;
+  if (!confirmModal || !confirmText) {
+    return;
+  }
+
+  confirmText.textContent = `Do you want to pick the ${fruit}?`;
+  confirmModal.classList.remove("hidden");
+  confirmModal.setAttribute("aria-hidden", "false");
+}
+
+function closeConfirmModal() {
+  selectedFruit = "";
+  if (!confirmModal) {
+    return;
+  }
+
+  confirmModal.classList.add("hidden");
+  confirmModal.setAttribute("aria-hidden", "true");
 }
 
 function addMessage(type, text) {
@@ -297,6 +327,7 @@ function renderDetections(payload) {
   }
 
   const objects = Array.isArray(payload.objects) ? payload.objects : [];
+  latestDetections = objects;
   const counts = objects.reduce((acc, item) => {
     acc[item.label] = (acc[item.label] || 0) + 1;
     return acc;
@@ -357,6 +388,32 @@ function renderDetections(payload) {
     });
 }
 
+function handleManualPickup() {
+  if (!selectedFruit) {
+    closeConfirmModal();
+    return;
+  }
+
+  const matchingObjects = latestDetections.filter(
+    (item) => item.label === selectedFruit,
+  );
+
+  if (matchingObjects.length > 0) {
+    const firstMatch = matchingObjects[0];
+    addMessage(
+      "assistant",
+      `Yes, the ${selectedFruit} is present${firstMatch.position_tag ? ` at ${firstMatch.position_tag}` : ""}. Manual pick-up can start.`,
+    );
+  } else {
+    addMessage(
+      "assistant",
+      `No ${selectedFruit} is currently detected, so that pick-up cannot start.`,
+    );
+  }
+
+  closeConfirmModal();
+}
+
 async function pollDetections() {
   try {
     const response = await fetch("/api/detections", { cache: "no-store" });
@@ -380,6 +437,28 @@ async function pollDetections() {
   } finally {
     window.setTimeout(pollDetections, 800);
   }
+}
+
+fruitPickButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    openConfirmModal(button.dataset.fruit || "");
+  });
+});
+
+if (confirmYes) {
+  confirmYes.addEventListener("click", handleManualPickup);
+}
+
+if (confirmNo) {
+  confirmNo.addEventListener("click", closeConfirmModal);
+}
+
+if (confirmModal) {
+  confirmModal.addEventListener("click", (event) => {
+    if (event.target === confirmModal) {
+      closeConfirmModal();
+    }
+  });
 }
 
 startCamera();

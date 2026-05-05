@@ -44,17 +44,17 @@
 
         <section class="panel control" data-panel="control">
           <div class="panel-header">
-            <h2>Robot control</h2>
+            <h2>Manual pick-up</h2>
           </div>
-          <div class="control-grid">
-            <button class="control-btn" type="button">Home</button>
-            <button class="control-btn" type="button">Pick</button>
-            <button class="control-btn" type="button">Place</button>
-            <button class="control-btn danger" type="button">Stop</button>
+          <div class="manual-grid">
+            <button class="control-btn fruit-pick" type="button" data-fruit="apple">Apple</button>
+            <button class="control-btn fruit-pick" type="button" data-fruit="banana">Banana</button>
+            <button class="control-btn fruit-pick" type="button" data-fruit="orange">Orange</button>
+            <button class="control-btn fruit-pick" type="button" data-fruit="broccoli">Broccoli</button>
+            <button class="control-btn fruit-pick" type="button" data-fruit="carrot">Carrot</button>
           </div>
-          <div class="control-slider">
-            <label for="speed" class="slider-label">Arm speed</label>
-            <input id="speed" type="range" min="0" max="100" value="45" />
+          <div class="control-hint">
+            Choose a fruit, confirm the action, and the assistant will check whether it is visible now.
           </div>
         </section>
 
@@ -136,6 +136,17 @@
           </form>
         </section>
       </main>
+    </div>
+
+    <div class="confirm-modal hidden" id="confirmModal" aria-hidden="true">
+      <div class="confirm-card">
+        <h3>Are you sure?</h3>
+        <p id="confirmText">Do you want to pick this fruit?</p>
+        <div class="confirm-actions">
+          <button class="confirm-btn yes" id="confirmYes" type="button">Yes</button>
+          <button class="confirm-btn no" id="confirmNo" type="button">No</button>
+        </div>
+      </div>
     </div>
 
     <script src="app.js"></script>
