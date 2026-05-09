@@ -14,11 +14,21 @@ const inputHint = document.querySelector(".input-hint");
 const sendBtn = chatForm?.querySelector(".send-btn");
 const micIndicator = document.getElementById("micIndicator");
 const llmStatus = document.getElementById("llmStatus");
-const fruitPickButtons = document.querySelectorAll(".fruit-pick");
+const locationChoices = document.querySelectorAll("[data-location]");
+const surfaceChoices = document.querySelectorAll("[data-surface]");
+const catalogButtons = document.querySelectorAll(".catalog-main");
+const infoButtons = document.querySelectorAll(".catalog-info");
 const confirmModal = document.getElementById("confirmModal");
 const confirmText = document.getElementById("confirmText");
 const confirmYes = document.getElementById("confirmYes");
 const confirmNo = document.getElementById("confirmNo");
+const infoModal = document.getElementById("infoModal");
+const infoTitle = document.getElementById("infoTitle");
+const infoBody = document.getElementById("infoBody");
+const infoClose = document.getElementById("infoClose");
+const errorModal = document.getElementById("errorModal");
+const errorText = document.getElementById("errorText");
+const errorClose = document.getElementById("errorClose");
 
 let micState = "idle";
 let uiLocked = false;
@@ -27,7 +37,11 @@ let cameraTimer = null;
 let cameraFramePending = false;
 let lastCameraFrameAt = 0;
 let latestDetections = [];
-let selectedFruit = "";
+let selectionState = {
+  location: "kitchen",
+  surface: "countertop",
+  fruit: "",
+};
 
 const fruitIcons = {
   apple: "🍎",
@@ -35,6 +49,34 @@ const fruitIcons = {
   orange: "🍊",
   broccoli: "🥦",
   carrot: "🥕",
+};
+
+const itemMetadata = {
+  apple: {
+    nutrition: "Contains fiber and vitamin C.",
+    handling: "Firm grip near the center.",
+    use_case: "Good candidate for top-layer pick tasks.",
+  },
+  banana: {
+    nutrition: "High in potassium and carbohydrates.",
+    handling: "Avoid squeezing the curved sides.",
+    use_case: "Useful for gentle grasp tests.",
+  },
+  orange: {
+    nutrition: "Rich in vitamin C and water.",
+    handling: "Round profile supports symmetric grasping.",
+    use_case: "Reliable for spherical object pickups.",
+  },
+  broccoli: {
+    nutrition: "High in fiber and vitamins K and C.",
+    handling: "Stem-side grasp is more stable than crown-side.",
+    use_case: "Tests irregular geometry handling.",
+  },
+  carrot: {
+    nutrition: "High in beta-carotene.",
+    handling: "Long thin profile needs aligned grasping.",
+    use_case: "Good for narrow object validation.",
+  },
 };
 
 function setView(view) {
@@ -54,27 +96,6 @@ function setView(view) {
   tabs.forEach((tab) => {
     tab.classList.toggle("active", tab.dataset.view === view);
   });
-}
-
-function openConfirmModal(fruit) {
-  selectedFruit = fruit;
-  if (!confirmModal || !confirmText) {
-    return;
-  }
-
-  confirmText.textContent = `Do you want to pick the ${fruit}?`;
-  confirmModal.classList.remove("hidden");
-  confirmModal.setAttribute("aria-hidden", "false");
-}
-
-function closeConfirmModal() {
-  selectedFruit = "";
-  if (!confirmModal) {
-    return;
-  }
-
-  confirmModal.classList.add("hidden");
-  confirmModal.setAttribute("aria-hidden", "true");
 }
 
 function addMessage(type, text) {
@@ -133,7 +154,7 @@ function setMicState(state, message) {
         ? "Recording... release Mic to stop"
         : state === "processing"
           ? "Transcribing + generating response"
-          : "Mic idle · Whisper ready on first use");
+          : "Mic idle · Whisper ready");
   }
 
   applyInteractivity();
@@ -169,6 +190,95 @@ function applyInteractivity() {
   }
 }
 
+function openModal(modal) {
+  if (!modal) {
+    return;
+  }
+  modal.classList.remove("hidden");
+  modal.setAttribute("aria-hidden", "false");
+}
+
+function closeModal(modal) {
+  if (!modal) {
+    return;
+  }
+  modal.classList.add("hidden");
+  modal.setAttribute("aria-hidden", "true");
+}
+
+function openConfirmModal(fruit) {
+  selectionState.fruit = fruit;
+  if (confirmText) {
+    confirmText.textContent = `Request item: ${fruit[0].toUpperCase()}${fruit.slice(1)}`;
+  }
+  openModal(confirmModal);
+}
+
+function openInfoModal(fruit) {
+  const metadata = itemMetadata[fruit];
+  if (!metadata || !infoTitle || !infoBody) {
+    return;
+  }
+
+  infoTitle.textContent = `${fruit[0].toUpperCase()}${fruit.slice(1)} info`;
+  infoBody.replaceChildren();
+
+  Object.entries(metadata).forEach(([key, value]) => {
+    const row = document.createElement("div");
+    row.className = "info-row";
+
+    const label = document.createElement("span");
+    label.className = "info-key";
+    label.textContent = key.replaceAll("_", " ");
+
+    const content = document.createElement("div");
+    content.textContent = value;
+
+    row.append(label, content);
+    infoBody.appendChild(row);
+  });
+
+  openModal(infoModal);
+}
+
+function openErrorModal(fruit) {
+  if (errorText) {
+    errorText.textContent = `Item Out of Stock: No ${fruit[0].toUpperCase()}${fruit.slice(1)} detected.`;
+  }
+  openModal(errorModal);
+}
+
+function updateChoiceButtons(buttons, activeValue, attributeName) {
+  buttons.forEach((button) => {
+    button.classList.toggle("active", button.dataset[attributeName] === activeValue);
+  });
+}
+
+function handleManualConfirm() {
+  if (!selectionState.fruit) {
+    closeModal(confirmModal);
+    return;
+  }
+
+  const matchingObjects = latestDetections.filter(
+    (item) => item.label === selectionState.fruit,
+  );
+
+  closeModal(confirmModal);
+
+  if (matchingObjects.length > 0) {
+    const item = matchingObjects[0];
+    addMessage(
+      "assistant",
+      `Request confirmed for ${selectionState.fruit} from ${selectionState.location} / ${selectionState.surface}. ${selectionState.fruit[0].toUpperCase()}${selectionState.fruit.slice(1)} detected${item.position_tag ? ` at ${item.position_tag}` : ""}. Execution can proceed.`,
+    );
+  } else {
+    openErrorModal(selectionState.fruit);
+  }
+
+  selectionState.fruit = "";
+}
+
 chatForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const text = chatInput.value.trim();
@@ -196,7 +306,6 @@ chatForm.addEventListener("submit", async (event) => {
 
     addMessage("assistant", payload.reply);
   } catch (error) {
-    console.error("LLM request failed:", error);
     addMessage("system", error.message || "The assistant is unavailable.");
   } finally {
     setChatPending(false);
@@ -215,7 +324,6 @@ async function startRecording() {
     }
     setMicState("recording", "Recording... release Mic to stop");
   } catch (error) {
-    console.error("Start recording failed:", error);
     addMessage("system", error.message || "Unable to start recording.");
     setMicState("idle");
     setUiLocked(false);
@@ -244,7 +352,6 @@ async function stopRecording() {
       addMessage("system", `Voice playback failed: ${payload.audio_error}`);
     }
   } catch (error) {
-    console.error("Stop recording failed:", error);
     addMessage("system", error.message || "Unable to process the recording.");
   } finally {
     setMicState("idle");
@@ -281,6 +388,77 @@ tabs.forEach((tab) => {
   });
 });
 
+locationChoices.forEach((button) => {
+  button.addEventListener("click", () => {
+    selectionState.location = button.dataset.location || "kitchen";
+    updateChoiceButtons(locationChoices, selectionState.location, "location");
+  });
+});
+
+surfaceChoices.forEach((button) => {
+  button.addEventListener("click", () => {
+    selectionState.surface = button.dataset.surface || "countertop";
+    updateChoiceButtons(surfaceChoices, selectionState.surface, "surface");
+  });
+});
+
+catalogButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    const fruit = button.dataset.fruit || "";
+    if (!fruit) {
+      return;
+    }
+    openConfirmModal(fruit);
+  });
+});
+
+infoButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    const fruit = button.dataset.info || "";
+    if (!fruit) {
+      return;
+    }
+    openInfoModal(fruit);
+  });
+});
+
+if (confirmYes) {
+  confirmYes.addEventListener("click", handleManualConfirm);
+}
+
+if (confirmNo) {
+  confirmNo.addEventListener("click", () => {
+    selectionState.fruit = "";
+    closeModal(confirmModal);
+  });
+}
+
+if (infoClose) {
+  infoClose.addEventListener("click", () => closeModal(infoModal));
+}
+
+if (errorClose) {
+  errorClose.addEventListener("click", () => {
+    selectionState.fruit = "";
+    closeModal(errorModal);
+  });
+}
+
+[confirmModal, infoModal, errorModal].forEach((modal) => {
+  if (!modal) {
+    return;
+  }
+  modal.addEventListener("click", (event) => {
+    if (event.target !== modal) {
+      return;
+    }
+
+    if (modal === infoModal) {
+      closeModal(infoModal);
+    }
+  });
+});
+
 async function startCamera() {
   if (!cameraStream || !cameraStatus || !cameraFrame) {
     return;
@@ -299,7 +477,7 @@ async function startCamera() {
     cameraFramePending = false;
     lastCameraFrameAt = Date.now();
     cameraFrame.classList.add("live");
-    // cameraStatus.textContent = "Camera live";
+    cameraStatus.textContent = "Camera live";
   };
 
   cameraStream.onerror = () => {
@@ -328,6 +506,7 @@ function renderDetections(payload) {
 
   const objects = Array.isArray(payload.objects) ? payload.objects : [];
   latestDetections = objects;
+
   const counts = objects.reduce((acc, item) => {
     acc[item.label] = (acc[item.label] || 0) + 1;
     return acc;
@@ -388,32 +567,6 @@ function renderDetections(payload) {
     });
 }
 
-function handleManualPickup() {
-  if (!selectedFruit) {
-    closeConfirmModal();
-    return;
-  }
-
-  const matchingObjects = latestDetections.filter(
-    (item) => item.label === selectedFruit,
-  );
-
-  if (matchingObjects.length > 0) {
-    const firstMatch = matchingObjects[0];
-    addMessage(
-      "assistant",
-      `Yes, the ${selectedFruit} is present${firstMatch.position_tag ? ` at ${firstMatch.position_tag}` : ""}. Manual pick-up can start.`,
-    );
-  } else {
-    addMessage(
-      "assistant",
-      `No ${selectedFruit} is currently detected, so that pick-up cannot start.`,
-    );
-  }
-
-  closeConfirmModal();
-}
-
 async function pollDetections() {
   try {
     const response = await fetch("/api/detections", { cache: "no-store" });
@@ -422,48 +575,20 @@ async function pollDetections() {
       throw new Error(payload.error || "Failed to load detections.");
     }
     renderDetections(payload);
-    // if (cameraStatus) {
-    //   if (payload.status === "error") {
-    //     cameraStatus.textContent = "Camera live · CV error";
-    //   } else if (payload.frame_id > 0 && lastCameraFrameAt) {
-    //     cameraStatus.textContent = `Camera live · CV frame ${payload.frame_id}`;
-    //   }
-    // }
   } catch (error) {
     if (detectionStatus) {
-      detectionStatus.textContent =
-        error.message || "Failed to load detections.";
+      detectionStatus.textContent = error.message || "Failed to load detections.";
     }
   } finally {
     window.setTimeout(pollDetections, 800);
   }
 }
 
-fruitPickButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    openConfirmModal(button.dataset.fruit || "");
-  });
-});
-
-if (confirmYes) {
-  confirmYes.addEventListener("click", handleManualPickup);
-}
-
-if (confirmNo) {
-  confirmNo.addEventListener("click", closeConfirmModal);
-}
-
-if (confirmModal) {
-  confirmModal.addEventListener("click", (event) => {
-    if (event.target === confirmModal) {
-      closeConfirmModal();
-    }
-  });
-}
-
 startCamera();
 pollDetections();
 setView("overview");
+updateChoiceButtons(locationChoices, selectionState.location, "location");
+updateChoiceButtons(surfaceChoices, selectionState.surface, "surface");
 
 window.addEventListener("beforeunload", () => {
   if (cameraTimer) {
@@ -473,5 +598,5 @@ window.addEventListener("beforeunload", () => {
 
 if (inputHint) {
   inputHint.textContent =
-    "Hold Mic to talk (Whisper + TTS). Send uses /api/llm text-only.";
+    "Hold Mic to talk, or use manual pick-up to browse the item catalog.";
 }

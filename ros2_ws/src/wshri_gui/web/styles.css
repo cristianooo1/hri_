@@ -348,6 +348,76 @@ body {
   gap: 12px;
 }
 
+.hierarchy-section {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.section-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: rgba(20, 20, 20, 0.72);
+}
+
+.choice-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.choice-chip {
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 2px solid rgba(0, 0, 0, 0.18);
+  background: rgba(255, 255, 255, 0.28);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.choice-chip.active {
+  background: rgba(255, 255, 255, 0.64);
+  border-color: rgba(0, 0, 0, 0.34);
+}
+
+.catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.catalog-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.26);
+  border: 2px solid rgba(0, 0, 0, 0.12);
+}
+
+.catalog-main,
+.catalog-info {
+  min-height: 46px;
+  border-radius: 12px;
+  border: 2px solid rgba(0, 0, 0, 0.18);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.catalog-main {
+  background: rgba(255, 255, 255, 0.54);
+  text-align: left;
+  padding: 0 14px;
+}
+
+.catalog-info {
+  min-width: 58px;
+  background: rgba(255, 210, 133, 0.75);
+}
+
 .control-btn {
   padding: 10px;
   border-radius: 12px;
@@ -587,7 +657,9 @@ body {
   color: rgba(20, 20, 20, 0.7);
 }
 
-.confirm-modal {
+.confirm-modal,
+.info-modal,
+.error-modal {
   position: fixed;
   inset: 0;
   display: grid;
@@ -597,8 +669,16 @@ body {
   z-index: 20;
 }
 
-.confirm-modal.hidden {
+.confirm-modal.hidden,
+.info-modal.hidden,
+.error-modal.hidden {
   display: none;
+}
+
+.info-modal,
+.error-modal {
+  place-items: center start;
+  padding-left: 32px;
 }
 
 .confirm-card {
@@ -621,6 +701,28 @@ body {
   line-height: 1.4;
 }
 
+.info-body {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.info-row {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.44);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.info-key {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.65;
+  margin-bottom: 4px;
+}
+
 .confirm-actions {
   display: flex;
   gap: 12px;
@@ -641,6 +743,11 @@ body {
 
 .confirm-btn.no {
   background: #e7c8a1;
+}
+
+.error-card {
+  border-color: #8e2516;
+  background: linear-gradient(180deg, #fff0e8, #f1d0c2);
 }
 
 @keyframes panelIn {
