@@ -4,7 +4,16 @@ import sys
 import threading
 import asyncio
 import tempfile
+import json
+from pydantic import BaseModel, Field
 from pathlib import Path
+
+try:
+    from google import genai
+    from google.genai import types  
+except ImportError:
+    genai = None
+    types = None                   
 
 
 def _add_project_venv_to_path():
@@ -67,32 +76,56 @@ def get_whisper_model():
     if WhisperModel is None:
         raise RuntimeError("faster-whisper is not installed on the GUI host.")
     if _whisper_model is None:
-        _whisper_model = WhisperModel("small", device="cpu", compute_type="int8")
+        _whisper_model = WhisperModel("medium", device="cpu", compute_type="int8")
     return _whisper_model
 
-def generate_response(user_input: str):
-    if genai is None:
-        return "System Error: google-genai is not installed."
-    api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
-        print("ERROR: NO API KEY DETECTED")
-        return "System Error: Missing API Key."
 
-    client = genai.Client(api_key=api_key)
+API_KEY = os.getenv("GEMINI_API_KEY")
+client = genai.Client(api_key=API_KEY) if API_KEY else None
 
-    full_prompt = (
-        "You are a robot assistant. Context: There are 2 bananas on the table. "
-        f"User says: {user_input}. Respond in one short, helpful sentence."
-    )
+class RobotResponse(BaseModel):
+    user_intent: str
+    action: str = Field(description="Must be: ask_confirmation, fetch_item, or dialogue")
+    target_item: str | None = Field(description="The item requested, or null if none")
+    internal_reasoning: str
+    message_to_user: str
+
+
+def generate_response(user_input: str, yolo_detections: list):
+    if client is None:
+        return {"error": "Missing API Key", "message_to_user": "System Error: Missing API Key."}
+
+    inventory = ", ".join(yolo_detections) if yolo_detections else "nothing"
+
+    # Notice we removed the [OUTPUT] instructions because the Pydantic schema handles it
+    system_instruction = f"""
+    You are a helpful robot assistant. 
+    [ENVIRONMENT] Current items on counter: {inventory}
+    
+    [RULES]
+    1. Mandatory Confirmation: If a user asks for an item (either directly or by describing it), you must first explicitly state the specific item from the [ENVIRONMENT] that matches their request, and then ask 'Are you sure?' before fetching.
+    2. Inventory: Only fetch items in the [ENVIRONMENT]. If missing, suggest what is available.
+    3. Semantic: Match attributes to items.
+    """
 
     try:
         response = client.models.generate_content(
             model='gemini-2.5-flash-lite',
-            contents=full_prompt,
+            contents=user_input,
+            config=types.GenerateContentConfig(
+                system_instruction=system_instruction,
+                response_mime_type='application/json',
+                response_schema=RobotResponse, # <--- This guarantees perfect JSON with no backticks
+                temperature=0.2 # Lower temperature is usually better for strict logic tasks
+            )
         )
-        return response.text.strip()
+        
+        # response.text is now guaranteed to be a clean JSON string
+        return json.loads(response.text)
+    
     except Exception as e:
-        return f"Gemini Error: {e}"
+        print(f"[\033[91mERROR\033[0m] Gemini API failed: {repr(e)}")
+        return {"error": str(e), "message_to_user": "I encountered a system error."}
 
 async def generate_and_play(text: str, voice: str = "en-US-JennyNeural"):
     if not text:
@@ -155,7 +188,7 @@ def start_recording():
         r.dynamic_energy_threshold = False
 
         try:
-            with sr.Microphone(device_index=4) as source:
+            with sr.Microphone(device_index=7) as source:
                 # r.adjust_for_ambient_noise(source, duration=0.5)
                 print("--- MIC ACTIVE ---")
                 while _is_recording:

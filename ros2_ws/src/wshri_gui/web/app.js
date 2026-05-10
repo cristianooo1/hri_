@@ -182,7 +182,7 @@ function applyInteractivity() {
   });
 
   if (micBtn) {
-    micBtn.disabled = micState === "processing";
+    micBtn.disabled = false;
   }
 
   if (sendBtn) {
@@ -250,7 +250,10 @@ function openErrorModal(fruit) {
 
 function updateChoiceButtons(buttons, activeValue, attributeName) {
   buttons.forEach((button) => {
-    button.classList.toggle("active", button.dataset[attributeName] === activeValue);
+    button.classList.toggle(
+      "active",
+      button.dataset[attributeName] === activeValue,
+    );
   });
 }
 
@@ -281,6 +284,13 @@ function handleManualConfirm() {
 
 chatForm.addEventListener("submit", async (event) => {
   event.preventDefault();
+
+  // NEW: Clear any stuck audio states before sending text
+  if (micState !== "idle") {
+    setMicState("idle");
+    setUiLocked(false);
+  }
+
   const text = chatInput.value.trim();
   if (!text) {
     return;
@@ -312,22 +322,65 @@ chatForm.addEventListener("submit", async (event) => {
     chatInput.focus();
   }
 });
+let cancelRecording = false;
 
 async function startRecording() {
   setUiLocked(true);
   setMicState("processing", "Starting mic...");
+  cancelRecording = false; // Reset the flag
+
   try {
     const response = await fetch("/api/listen/start", { method: "POST" });
     const payload = await response.json();
     if (!response.ok) {
       throw new Error(payload.error || "Failed to start recording.");
     }
+
+    // Catch the race condition: If the user already released the mouse
+    // while we were waiting for the server, stop immediately!
+    if (cancelRecording) {
+      stopRecording();
+      return;
+    }
+
     setMicState("recording", "Recording... release Mic to stop");
   } catch (error) {
     addMessage("system", error.message || "Unable to start recording.");
     setMicState("idle");
     setUiLocked(false);
   }
+}
+
+// 2. Update your micBtn event listeners
+if (micBtn) {
+  // CRITICAL: Force the mic button to NOT act as a form submit button
+  // in case it sits inside the <form> tags.
+  micBtn.type = "button";
+
+  micBtn.addEventListener("pointerdown", (event) => {
+    if (micState !== "idle") {
+      return;
+    }
+    if (micBtn.setPointerCapture) {
+      micBtn.setPointerCapture(event.pointerId);
+    }
+    startRecording();
+  });
+
+  const handlePointerRelease = () => {
+    if (micState === "processing") {
+      // The user released the button before the mic fully started.
+      // Flag it so startRecording() knows to abort immediately.
+      cancelRecording = true;
+    } else if (micState === "recording") {
+      stopRecording();
+    }
+  };
+
+  micBtn.addEventListener("pointerup", handlePointerRelease);
+  micBtn.addEventListener("pointerleave", handlePointerRelease);
+  micBtn.addEventListener("pointercancel", handlePointerRelease);
+  window.addEventListener("pointerup", handlePointerRelease);
 }
 
 async function stopRecording() {
@@ -359,28 +412,28 @@ async function stopRecording() {
   }
 }
 
-if (micBtn) {
-  micBtn.addEventListener("pointerdown", (event) => {
-    if (micState !== "idle") {
-      return;
-    }
-    if (micBtn.setPointerCapture) {
-      micBtn.setPointerCapture(event.pointerId);
-    }
-    startRecording();
-  });
+// if (micBtn) {
+//   micBtn.addEventListener("pointerdown", (event) => {
+//     if (micState !== "idle") {
+//       return;
+//     }
+//     if (micBtn.setPointerCapture) {
+//       micBtn.setPointerCapture(event.pointerId);
+//     }
+//     startRecording();
+//   });
 
-  const handlePointerRelease = () => {
-    if (micState === "recording") {
-      stopRecording();
-    }
-  };
+//   const handlePointerRelease = () => {
+//     if (micState === "recording") {
+//       stopRecording();
+//     }
+//   };
 
-  micBtn.addEventListener("pointerup", handlePointerRelease);
-  micBtn.addEventListener("pointerleave", handlePointerRelease);
-  micBtn.addEventListener("pointercancel", handlePointerRelease);
-  window.addEventListener("pointerup", handlePointerRelease);
-}
+//   micBtn.addEventListener("pointerup", handlePointerRelease);
+//   micBtn.addEventListener("pointerleave", handlePointerRelease);
+//   micBtn.addEventListener("pointercancel", handlePointerRelease);
+//   window.addEventListener("pointerup", handlePointerRelease);
+// }
 
 tabs.forEach((tab) => {
   tab.addEventListener("click", () => {
@@ -577,7 +630,8 @@ async function pollDetections() {
     renderDetections(payload);
   } catch (error) {
     if (detectionStatus) {
-      detectionStatus.textContent = error.message || "Failed to load detections.";
+      detectionStatus.textContent =
+        error.message || "Failed to load detections.";
     }
   } finally {
     window.setTimeout(pollDetections, 800);

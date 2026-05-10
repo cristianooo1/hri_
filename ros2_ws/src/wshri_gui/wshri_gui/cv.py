@@ -199,9 +199,12 @@ def build_scene_packet(frame_id, scene_summary):
     """
     Build the full scene packet to be sent to downstream modules.
     """
+    inventory_list = [track["label"] for track in scene_summary]
+
     return {
         "frame_id": frame_id,
         "num_objects": len(scene_summary),
+        "inventory_list": inventory_list,
         "objects": scene_summary
     }
 

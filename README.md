@@ -28,6 +28,10 @@ GEMINI_API_KEY = "your_gemini_api_key"
 
 run the following command to find your microphone index:
 ```
+sudo apt install pipewire-audio-client-libraries
+
+systemctl --user restart pipewire pipewire-pulse wireplumber
+
 uv run python -c "import speech_recognition as sr; [print(f'{i}: {n}') for i, n in enumerate(sr.Microphone.list_microphone_names())]"
 
 ```

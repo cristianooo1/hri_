@@ -217,15 +217,27 @@ def _build_handler(web_dir: Path, cv_runtime: CvRuntime):
                     self._send_json(HTTPStatus.OK, {"reply": "No audio detected."})
                     return
 
+                # --- NEW: Get real-time YOLO detections ---
+                cv_status = cv_runtime.get_status()
+                yolo_objects = cv_status.get("objects", [])
+                inventory_list = [obj["label"] for obj in yolo_objects]
+
                 try:
-                    ai_reply = llm.generate_response(user_text)
+                    # Pass BOTH the text and the inventory to the LLM
+                    # (Assumes llm.generate_response returns a parsed dictionary)
+                    llm_response_dict = llm.generate_response(user_text, inventory_list)
+                    
+                    # Extract the spoken message for TTS
+                    message_to_user = llm_response_dict.get("message_to_user", "I am having trouble processing that.")
+                    
                 except Exception as exc:
                     self._send_json(HTTPStatus.BAD_GATEWAY, {"error": str(exc)})
                     return
 
                 audio_error = ""
                 try:
-                    asyncio.run(llm.generate_and_play(ai_reply))
+                    # ONLY pass the conversational text to the TTS, not the whole JSON
+                    asyncio.run(llm.generate_and_play(message_to_user))
                 except Exception as exc:
                     audio_error = str(exc)
 
@@ -233,27 +245,59 @@ def _build_handler(web_dir: Path, cv_runtime: CvRuntime):
                     HTTPStatus.OK,
                     {
                         "user_said": user_text,
-                        "reply": ai_reply,
+                        "reply": message_to_user, # Send spoken text to GUI log
+                        "llm_action": llm_response_dict.get("action"), # Tell GUI what state we are in
+                        "target_item": llm_response_dict.get("target_item"), # Tell GUI what item we want
                         "audio_error": audio_error,
                     },
                 )
                 return
 
             if route == "/api/llm":
-                content_length = int(self.headers.get("Content-Length", "0"))
-                raw_body = self.rfile.read(content_length)
                 try:
-                    payload = json.loads(raw_body.decode("utf-8"))
-                    prompt = str(payload.get("prompt", "")).strip()
-
-                    if not prompt:
-                        self._send_json(HTTPStatus.BAD_REQUEST, {"error": "Prompt required."})
-                        return
-
-                    reply = llm.generate_response(prompt)
-                    self._send_json(HTTPStatus.OK, {"reply": reply})
+                    user_text = llm.stop_and_transcribe()
                 except Exception as exc:
                     self._send_json(HTTPStatus.BAD_GATEWAY, {"error": str(exc)})
+                    return
+
+                if not user_text:
+                    self._send_json(HTTPStatus.OK, {"reply": "No audio detected."})
+                    return
+
+                # --- NEW: Get real-time YOLO detections ---
+                cv_status = cv_runtime.get_status()
+                yolo_objects = cv_status.get("objects", [])
+                inventory_list = [obj["label"] for obj in yolo_objects]
+
+                try:
+                    # Pass BOTH the text and the inventory to the LLM
+                    # (Assumes llm.generate_response returns a parsed dictionary)
+                    llm_response_dict = llm.generate_response(user_text, inventory_list)
+                    
+                    # Extract the spoken message for TTS
+                    message_to_user = llm_response_dict.get("message_to_user", "I am having trouble processing that.")
+                    
+                except Exception as exc:
+                    self._send_json(HTTPStatus.BAD_GATEWAY, {"error": str(exc)})
+                    return
+
+                audio_error = ""
+                try:
+                    # ONLY pass the conversational text to the TTS, not the whole JSON
+                    asyncio.run(llm.generate_and_play(message_to_user))
+                except Exception as exc:
+                    audio_error = str(exc)
+
+                self._send_json(
+                    HTTPStatus.OK,
+                    {
+                        "user_said": user_text,
+                        "reply": message_to_user, # Send spoken text to GUI log
+                        "llm_action": llm_response_dict.get("action"), # Tell GUI what state we are in
+                        "target_item": llm_response_dict.get("target_item"), # Tell GUI what item we want
+                        "audio_error": audio_error,
+                    },
+                )
                 return
 
             self.send_error(HTTPStatus.NOT_FOUND, "Unknown endpoint")
